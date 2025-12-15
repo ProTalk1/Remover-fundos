@@ -1,0 +1,95 @@
+
+<div class="min-h-screen flex flex-col items-center justify-center p-4 font-sans text-slate-800">
+
+  <header class="text-center mb-8">
+    <h1 class="text-4xl md:text-5xl font-bold text-slate-700">Remover Fundo de Logos</h1>
+    <p class="text-slate-500 mt-2">Carregue uma imagem para remover o fundo automaticamente.</p>
+  </header>
+
+  <main class="w-full max-w-4xl bg-white rounded-2xl shadow-lg p-6 md:p-8 transition-all duration-300">
+
+    @if (!imageFile()) {
+      <div
+        class="border-2 border-dashed border-slate-300 rounded-lg p-12 text-center cursor-pointer hover:border-sky-500 hover:bg-sky-50 transition-colors"
+        (click)="fileInput.click()"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)">
+        <input type="file" #fileInput class="hidden" (change)="onFileSelected($event)" accept="image/png, image/jpeg, image/svg+xml">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+        <p class="mt-4 text-lg font-semibold text-slate-600">Arraste e solte uma imagem aqui</p>
+        <p class="text-slate-500">ou clique para selecionar</p>
+        <p class="text-xs text-slate-400 mt-2">PNG, JPG ou SVG</p>
+      </div>
+    } @else {
+      <div class="flex flex-col gap-8">
+        <!-- Previews -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
+          <div class="text-center">
+            <h3 class="text-lg font-semibold mb-2 text-slate-600">Original</h3>
+            <div class="aspect-square bg-slate-200 rounded-lg overflow-hidden ring-1 ring-slate-200 shadow-sm flex items-center justify-center">
+              <canvas #originalCanvas class="max-w-full max-h-full"></canvas>
+            </div>
+          </div>
+          <div class="text-center">
+            <h3 class="text-lg font-semibold mb-2 text-slate-600">Resultado</h3>
+            <div class="aspect-square bg-slate-200 rounded-lg overflow-hidden ring-1 ring-slate-200 shadow-sm relative flex items-center justify-center"
+                 style="background-image: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) ; background-size: 20px 20px;">
+              @if (processing()) {
+                <div class="absolute inset-0 bg-white/70 flex flex-col items-center justify-center backdrop-blur-sm z-10">
+                  <svg class="animate-spin h-8 w-8 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <p class="mt-2 text-slate-600">Processando...</p>
+                </div>
+              }
+              <canvas #processedCanvas class="max-w-full max-h-full"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+          <label for="threshold" class="block text-sm font-medium text-slate-700 mb-2">
+            Sensibilidade (Threshold): <span class="font-bold">{{ threshold() }}</span>
+          </label>
+          <input
+            id="threshold"
+            type="range"
+            min="0"
+            max="255"
+            [value]="threshold()"
+            (input)="onThresholdChange($event)"
+            class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+            [disabled]="processing()">
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button
+            (click)="downloadImage()"
+            [disabled]="processing() || !processedImageReady()"
+            class="w-full sm:w-auto flex-1 inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors">
+             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Baixar PNG
+          </button>
+          <button
+            (click)="reset()"
+            class="w-full sm:w-auto flex-1 inline-flex items-center justify-center px-6 py-3 border border-slate-300 text-base font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M20 20v-5h-5" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 9a9 9 0 0114.13-5.12M20 15a9 9 0 01-14.13 5.12" />
+            </svg>
+            Reiniciar
+          </button>
+        </div>
+      </div>
+    }
+  </main>
+
+</div>

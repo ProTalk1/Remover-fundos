@@ -1,0 +1,5 @@
+{
+  "name": "Removedor de Fundo de Imagem",
+  "description": "Uma aplicação web simples e eficaz para remover o fundo de imagens, especialmente logos, diretamente no seu navegador. Carregue uma imagem, ajuste a sensibilidade e baixe o resultado com fundo transparente.",
+  "requestFramePermissions": []
+}
